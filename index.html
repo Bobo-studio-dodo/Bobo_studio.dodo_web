@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bobo_studio.dodo | 質感選物</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent-pink: #ff9eb5; --accent-hover: #ff7a96; --bg-main: #fffafc; --text-primary: #8a5a6a; }
+        body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: var(--bg-main); color: var(--text-primary); }
+        
+        header { padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;}
+        .brand-name { font-weight: bold; font-size: 1.3rem; color: #8a5a6a; letter-spacing: 1px; }
+        
+        .btn { background: var(--accent-pink); color: white; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.3s; font-weight: 500;}
+        .btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        
+        .hero { text-align: center; padding: 4rem 1rem; min-height: 80vh; display: flex; flex-direction: column; align-items: center; }
+        h1 { font-size: 2.2rem; margin-bottom: 0.5rem; color: #8a5a6a; }
+        p { color: #b38996; font-size: 1.1rem; margin-bottom: 2rem; }
+
+        /* 儀表板按鈕區 */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 900px; padding: 0 20px; }
+        .dash-card { 
+            background: white; padding: 30px 20px; border-radius: 20px; text-decoration: none; color: var(--text-primary);
+            box-shadow: 0 10px 20px rgba(255, 158, 181, 0.15); border: 2px solid transparent; transition: 0.3s;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        .dash-card:hover { transform: translateY(-5px); border-color: var(--accent-pink); box-shadow: 0 15px 30px rgba(255, 158, 181, 0.25); }
+        .dash-icon { font-size: 3rem; margin-bottom: 15px; }
+        
+        /* Notion 公告區塊 */
+        .notion-box {
+            margin-top: 40px;
+            background: #fff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid #ffe3ec;
+        }
+        .notion-btn {
+            background-color: #ffffff;
+            color: #333;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: 0.3s;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .notion-btn:hover { background-color: #f7f7f7; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .notion-icon { width: 24px; height: 24px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand-name">Bobo_studio.dodo</div>
+        <div id="nav-btns"></div>
+    </header>
+
+    <div class="hero">
+        <h1 id="heroTitle">探索您的質感選物</h1>
+        <p id="heroDesc">登入會員以享受專屬服務</p>
+        
+        <div id="loginArea">
+            <button id="mainLoginBtn" class="btn" style="padding: 15px 50px; font-size: 1.2rem;">🚀 立即登入 / 註冊</button>
+            
+            <div class="notion-box">
+                <h3 style="margin: 0 0 10px 0; color: #8a5a6a;">📢 賣場最新公告</h3>
+                <p style="font-size: 0.95rem; color: #666; margin-bottom: 15px;">
+                    點擊下方按鈕查看最新的代購行程、到貨進度與服務條款。
+                </p>
+                
+                <a href="https://literate-alfalfa-4fb.notion.site/25435751b5c080f49428ff40b2a5bf62?v=25435751b5c08177876a000c0ca2f4e9&source=copy_link" target="_blank" class="notion-btn">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" class="notion-icon" alt="Notion">
+                    前往 Notion 查看詳細公告
+                </a>
+            </div>
+        </div>
+
+        <div id="dashboardArea" class="dashboard-grid" style="display:none;">
+            <a href="member.html" class="dash-card">
+                <div class="dash-icon">📝</div><div class="dash-title">會員基本資料</div><div class="dash-desc">修改姓名、電話、銀行帳戶</div>
+            </a>
+            <a href="shipping.html" class="dash-card">
+                <div class="dash-icon">📦</div><div class="dash-title">寄件資料設定</div><div class="dash-desc">設定 7-11 門市與郵寄地址</div>
+            </a>
+            <a href="orders.html" class="dash-card">
+                <div class="dash-icon">📄</div><div class="dash-title">我的訂單</div><div class="dash-desc">查詢歷史購買記錄</div>
+            </a>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // ✅ Config 已填好
+        const firebaseConfig = {
+            apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
+            authDomain: "my-shop-2026-1b573.firebaseapp.com",
+            projectId: "my-shop-2026-1b573",
+            storageBucket: "my-shop-2026-1b573.firebasestorage.app",
+            messagingSenderId: "15775390058",
+            appId: "1:15775390058:web:ef08a6b8bca2657ecbed13"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        onAuthStateChanged(auth, (user) => {
+            const nav = document.getElementById('nav-btns');
+            const loginArea = document.getElementById('loginArea');
+            const dashArea = document.getElementById('dashboardArea');
+            const title = document.getElementById('heroTitle');
+            const desc = document.getElementById('heroDesc');
+
+            if (user) {
+                // 已登入
+                nav.innerHTML = `<button id="logoutBtn" class="btn" style="background:#d6a2b1;">登出</button>`;
+                title.innerText = `歡迎回來，${user.displayName}`;
+                desc.innerText = "請選擇您要進行的操作：";
+                loginArea.style.display = 'none';
+                dashArea.style.display = 'grid';
+                document.getElementById('logoutBtn').onclick = () => { if(confirm("確定登出？")) signOut(auth).then(()=>location.reload()); };
+            } else {
+                // 未登入
+                nav.innerHTML = `<button id="navLoginBtn" class="btn">登入</button>`;
+                title.innerText = "探索您的質感選物";
+                desc.innerText = "登入會員以填寫寄送資料，享受專屬服務。";
+                loginArea.style.display = 'block';
+                dashArea.style.display = 'none';
+                const doLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
+                document.getElementById('mainLoginBtn').onclick = doLogin;
+                document.getElementById('navLoginBtn').onclick = doLogin;
+            }
+        });
+    </script>
+</body>
+</html>

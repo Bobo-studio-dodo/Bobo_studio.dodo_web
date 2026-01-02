@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>寄件資料設定 | Bobo_studio.dodo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --text-primary: #8a5a6a; --text-secondary: #b38996; --accent-pink: #ff9eb5; --accent-hover: #ff7a96; --bg-main: #fffafc; --bg-card: #ffffff; --danger: #e74c3c; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: var(--bg-main); color: var(--text-primary); }
+        
+        header { background: rgba(255, 255, 255, 0.9); padding: 0.8rem 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe3ec; }
+        .logo-text { font-weight: bold; font-size: 1.2rem; color: var(--text-primary); }
+        
+        .container { max-width: 700px; margin: 2rem auto; padding: 0 1.5rem 4rem 1.5rem; }
+        .card { background: var(--bg-card); border-radius: 20px; padding: 2.5rem; box-shadow: 0 10px 25px rgba(255, 158, 181, 0.15); border: 1px solid #ffe3ec; }
+        
+        .btn { background-color: var(--accent-pink); color: white; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; transition: 0.3s; font-size: 1rem; width: 100%; margin-top: 20px; }
+        .btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+        
+        /* 回大廳按鈕 */
+        .btn-back { background-color: #eee; color: #666; border: none; padding: 8px 15px; border-radius: 50px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+        .btn-back:hover { background-color: #ddd; }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 2px solid #ffe3ec; padding-bottom: 10px; }
+        .tab-btn { flex: 1; text-align: center; padding: 12px; cursor: pointer; border-radius: 10px; font-weight: bold; color: var(--text-secondary); background: transparent; border: none; transition: 0.3s; }
+        .tab-btn.active { background-color: var(--accent-pink); color: white; box-shadow: 0 4px 10px rgba(255, 158, 181, 0.3); }
+        
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-section-title { font-size: 1.1rem; font-weight: 700; margin: 25px 0 15px 0; color: var(--text-primary); border-left: 4px solid var(--accent-pink); padding-left: 10px; background: #fff5f7; padding: 8px 10px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #ffe3ec; border-radius: 10px; background: #fffafa; font-size: 1rem; color: #555; }
+        .form-input:focus { outline: none; border-color: var(--accent-pink); background: white; }
+        .readonly-input { background: #f0f0f0; color: #888; cursor: not-allowed; }
+        .form-row { display: flex; gap: 15px; }
+
+        .error-message { color: var(--danger); font-size: 0.85rem; margin-top: 5px; display: none; }
+        .input-error { border-color: var(--danger) !important; background: #fff0f0; }
+        
+        .hint-tag { background: #e3f2fd; color: #1565c0; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; margin-left: 5px; vertical-align: middle; }
+        .radio-group { display: flex; flex-direction: column; gap: 10px; }
+        .radio-label { display: flex; align-items: center; cursor: pointer; }
+        .radio-label input { margin-right: 10px; accent-color: var(--accent-pink); width: 18px; height: 18px; }
+
+        @media (max-width: 480px) { .form-row { flex-direction: column; gap: 15px; } }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-text">寄件資料設定</div>
+        <button class="btn-back" onclick="location.href='index.html'">⬅ 回大廳</button>
+    </header>
+
+    <div class="container">
+        <div id="loadingOverlay" style="text-align:center; padding: 50px;"><h3>🔄 讀取寄件資料...</h3></div>
+
+        <div class="card" id="formCard" style="display:none;">
+            
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab('store')">🏪 7-11 超商取貨</button>
+                <button class="tab-btn" onclick="switchTab('postal')">🚚 郵寄宅配</button>
+            </div>
+
+            <div id="tab-store" class="tab-content active">
+                <div class="form-section-title">取件人資訊</div>
+                <div class="form-group">
+                    <label class="form-label">取件人姓名 <span style="font-size:0.85rem; color:#888;">(自動綁定會員)</span></label>
+                    <input type="text" id="shipName" class="form-input readonly-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">手機號碼 <span class="hint-tag">iOpenMall 會員</span></label>
+                    <input type="tel" id="shipPhone" class="form-input" maxlength="10" placeholder="請輸入 iOpenMall 會員電話" onblur="validatePhone(this)" oninput="restrictNum(this)">
+                    <span class="error-message">❌ 格式錯誤</span>
+                </div>
+
+                <div class="form-section-title">7-11 門市資訊</div>
+                <div class="form-group">
+                    <label class="form-label">門市店號 (6碼)</label>
+                    <input type="text" id="storeCode" class="form-input" maxlength="6" placeholder="例如：123456" oninput="restrictNum(this)">
+                    <div style="margin-top:5px; font-size:0.85rem;"><a href="https://emap.presco.com.tw/c2cemap.ashx" target="_blank" style="color:var(--accent-hover);">🔗 查詢店號</a></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">門市名稱</label>
+                    <input type="text" id="storeName" class="form-input" placeholder="例如：XX門市">
+                </div>
+                <button class="btn" onclick="saveData('store')">💾 儲存超商資料</button>
+            </div>
+
+            <div id="tab-postal" class="tab-content">
+                <div class="form-section-title">收件人資訊</div>
+                <div class="form-group">
+                    <label class="form-label">收件人姓名 <span style="font-size:0.85rem; color:#888;">(自動綁定會員)</span></label>
+                    <input type="text" id="postalName" class="form-input readonly-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">聯絡電話</label>
+                    <input type="tel" id="postalPhone" class="form-input" maxlength="10" placeholder="09xxxxxxxx" onblur="validatePhone(this)" oninput="restrictNum(this)">
+                    <span class="error-message">❌ 格式錯誤</span>
+                </div>
+
+                <div class="form-section-title">寄送地址</div>
+                <div class="form-row">
+                    <div class="form-group" style="flex:1">
+                        <label class="form-label">郵遞區號</label>
+                        <input type="text" id="postalZip" class="form-input" maxlength="5" placeholder="3+2碼" oninput="restrictNum(this)">
+                    </div>
+                    <div class="form-group" style="flex:3">
+                        <label class="form-label">詳細地址</label>
+                        <input type="text" id="postalAddr" class="form-input" placeholder="縣市/區/路/巷/號/樓">
+                    </div>
+                </div>
+
+                <div class="form-section-title">投遞失敗處理</div>
+                <div class="form-group">
+                    <label class="form-label">若無人簽收或招領逾期：</label>
+                    <div class="radio-group">
+                        <label class="radio-label"><input type="radio" name="postalAction" value="return" checked> 退回原寄件人 (買家需負擔重新寄送運費)</label>
+                        <label class="radio-label"><input type="radio" name="postalAction" value="discard"> 直接丟棄 (不退款)</label>
+                    </div>
+                </div>
+                <button class="btn" onclick="saveData('postal')" style="background-color:#2980b9;">🚚 儲存郵寄資料</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // ✅ 您的 Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
+            authDomain: "my-shop-2026-1b573.firebaseapp.com",
+            projectId: "my-shop-2026-1b573",
+            storageBucket: "my-shop-2026-1b573.firebasestorage.app",
+            messagingSenderId: "15775390058",
+            appId: "1:15775390058:web:ef08a6b8bca2657ecbed13"
+        };
+        
+        // ✅ 您的 GAS 後端網址
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzVo9_FACAbkJnnIIXTXu4g4pgCSPKrx9q90Ywd1_rlbXsbmmAmnAprbAbfnB-akdLhtA/exec";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        let currentUserEmail = "";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserEmail = user.email;
+                try {
+                    // 1. 抓取基本資料 (為了拿真實姓名)
+                    const resMember = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "google_login", email: user.email, name: user.displayName }) });
+                    const jsonMember = await resMember.json();
+                    
+                    let realName = user.displayName; // 預設用 Google 暱稱
+                    if(jsonMember.data && jsonMember.data.name) {
+                        realName = jsonMember.data.name;
+                    } else {
+                        alert("⚠️ 提醒：您尚未填寫「會員基本資料」，建議先至會員中心填寫，這裡才會自動帶入正確姓名！");
+                    }
+                    
+                    document.getElementById('shipName').value = realName;
+                    document.getElementById('postalName').value = realName;
+
+                    // 2. 抓取已儲存的寄件資料 (action: "get_shipping")
+                    const resShip = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "get_shipping", email: user.email }) });
+                    const jsonShip = await resShip.json();
+
+                    if(jsonShip.status === "found") {
+                        // 填入超商資料
+                        if(jsonShip.data.phone) document.getElementById('shipPhone').value = jsonShip.data.phone;
+                        if(jsonShip.data.storeCode) document.getElementById('storeCode').value = jsonShip.data.storeCode;
+                        if(jsonShip.data.storeName) document.getElementById('storeName').value = jsonShip.data.storeName;
+                        
+                        // 填入郵寄資料
+                        if(jsonShip.data.phone) document.getElementById('postalPhone').value = jsonShip.data.phone; // 共用電話
+                        if(jsonShip.data.postalZip) document.getElementById('postalZip').value = jsonShip.data.postalZip;
+                        if(jsonShip.data.postalAddr) document.getElementById('postalAddr').value = jsonShip.data.postalAddr;
+                        if(jsonShip.data.postalAction) {
+                            const radios = document.getElementsByName('postalAction');
+                            for(let r of radios) { if(r.value === jsonShip.data.postalAction) r.checked = true; }
+                        }
+                    }
+
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    document.getElementById('formCard').style.display = 'block';
+
+                } catch (e) {
+                    console.error(e);
+                    alert("讀取資料失敗，請稍後再試");
+                }
+            } else {
+                alert("請先登入");
+                location.href = "index.html";
+            }
+        });
+
+        window.switchTab = (tab) => {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            event.target.classList.add('active');
+        };
+
+        window.restrictNum = (el) => el.value = el.value.replace(/[^\d]/g, '');
+        window.validatePhone = (el) => {
+            const valid = /^09\d{8}$/.test(el.value);
+            el.nextElementSibling.style.display = valid ? 'none' : 'block';
+            el.classList.toggle('input-error', !valid);
+        };
+
+        window.saveData = async (type) => {
+            const btn = event.target;
+            const originalText = btn.innerText;
+            
+            // 簡易驗證
+            if(type === 'store') {
+                if(!document.getElementById('shipPhone').value || !document.getElementById('storeCode').value) {
+                    alert("❌ 請完整填寫超商資料"); return;
+                }
+            } else {
+                if(!document.getElementById('postalPhone').value || !document.getElementById('postalZip').value || !document.getElementById('postalAddr').value) {
+                    alert("❌ 請完整填寫郵寄資料"); return;
+                }
+            }
+
+            btn.innerText = "處理中...";
+            btn.disabled = true;
+
+            const payload = {
+                action: "save_shipping",
+                email: currentUserEmail,
+                type: type, // 告訴後端是存 'store' 還是 'postal'
+                recipient: document.getElementById('shipName').value, // 姓名是共用的
+                phone: type === 'store' ? document.getElementById('shipPhone').value : document.getElementById('postalPhone').value,
+                
+                // 超商欄位
+                storeCode: document.getElementById('storeCode').value,
+                storeName: document.getElementById('storeName').value,
+                
+                // 郵寄欄位
+                postalZip: document.getElementById('postalZip').value,
+                postalAddr: document.getElementById('postalAddr').value,
+                postalAction: document.querySelector('input[name="postalAction"]:checked').value
+            };
+
+            try {
+                const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
+                const json = await res.json();
+                if(json.status === "success") {
+                    alert("✅ 資料儲存成功！");
+                } else {
+                    alert("❌ 儲存失敗：" + json.message);
+                }
+            } catch(e) {
+                alert("連線錯誤");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的訂單 | Bobo_studio.dodo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 風格設定 --- */
+        :root {
+            --text-primary: #8a5a6a; --text-secondary: #b38996;
+            --accent-pink: #ff9eb5; --accent-hover: #ff7a96;
+            --bg-main: #fffafc; --bg-card: #ffffff;
+            --status-pending: #f39c12; --status-shipping: #3498db; --status-done: #2ecc71;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: var(--bg-main); color: var(--text-primary); }
+        
+        header { background: rgba(255, 255, 255, 0.9); padding: 0.8rem 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe3ec; position: sticky; top: 0; z-index: 10; }
+        .logo-text { font-weight: bold; font-size: 1.2rem; color: var(--text-primary); }
+        
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem 4rem 1.5rem; }
+        
+        /* 返回按鈕樣式 */
+        .btn-back { background-color: #eee; color: #666; border: none; padding: 8px 15px; border-radius: 50px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+        .btn-back:hover { background-color: #ddd; }
+
+        /* 訂單卡片樣式 */
+        .order-card { 
+            background: var(--bg-card); border-radius: 15px; padding: 20px; 
+            box-shadow: 0 5px 15px rgba(255, 158, 181, 0.1); 
+            border: 1px solid #ffe3ec; margin-bottom: 20px; transition: 0.3s;
+        }
+        .order-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(255, 158, 181, 0.2); }
+
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .order-id { font-weight: bold; color: var(--text-secondary); font-size: 0.9rem; }
+        .order-date { font-size: 0.85rem; color: #999; }
+
+        .order-body { display: flex; justify-content: space-between; align-items: center; }
+        .order-info { flex: 1; }
+        .order-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; color: #555; }
+        .order-price { color: var(--text-primary); font-weight: bold; font-size: 1.2rem; }
+        
+        .status-badge { padding: 5px 12px; border-radius: 20px; color: white; font-size: 0.85rem; font-weight: bold; }
+        .st-pending { background-color: var(--status-pending); }
+        .st-shipping { background-color: var(--status-shipping); }
+        .st-done { background-color: var(--status-done); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-text">我的訂單記錄</div>
+        <button class="btn-back" onclick="location.href='index.html'">⬅ 回大廳</button>
+    </header>
+
+    <div class="container">
+        <div id="loadingOverlay" style="text-align:center; padding: 50px;">
+            <h3>🔄 讀取訂單中...</h3>
+        </div>
+        
+        <div id="orderList" style="display:none;">
+            </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        // ✅ 您的 Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
+            authDomain: "my-shop-2026-1b573.firebaseapp.com",
+            projectId: "my-shop-2026-1b573",
+            storageBucket: "my-shop-2026-1b573.firebasestorage.app",
+            messagingSenderId: "15775390058",
+            appId: "1:15775390058:web:ef08a6b8bca2657ecbed13"
+        };
+        
+        // ✅ 您的 GAS 後端網址
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzVo9_FACAbkJnnIIXTXu4g4pgCSPKrx9q90Ywd1_rlbXsbmmAmnAprbAbfnB-akdLhtA/exec";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // 監聽登入狀態
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // 已登入 -> 呼叫後端抓取真實訂單
+                try {
+                    const res = await fetch(GAS_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "get_orders", email: user.email })
+                    });
+                    const json = await res.json();
+                    
+                    // 隱藏讀取圈圈，顯示訂單列表
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    document.getElementById('orderList').style.display = 'block';
+                    
+                    // 把資料畫在畫面上
+                    renderOrders(json.data); 
+
+                } catch (e) {
+                    alert("訂單讀取失敗，請稍後再試");
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            } else {
+                // 未登入 -> 踢回首頁
+                alert("請先登入！");
+                window.location.href = "index.html";
+            }
+        });
+
+        // --- 將訂單資料轉為 HTML 卡片 ---
+        function renderOrders(orders) {
+            const list = document.getElementById('orderList');
+            
+            // 如果後端回傳空陣列，顯示「尚無訂單」
+            if (!orders || orders.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:50px; color:#ccc;"><h3>📭 目前沒有訂單記錄</h3></div>';
+                return;
+            }
+
+            let html = "";
+            orders.forEach(order => {
+                // 根據狀態文字決定顏色 class
+                let stClass = "st-pending"; // 預設黃色 (處理中)
+                
+                // 如果狀態文字包含「配送」，變藍色
+                if (order.status && order.status.includes("配送")) stClass = "st-shipping";
+                
+                // 如果狀態文字包含「完成」，變綠色
+                if (order.status && order.status.includes("完成")) stClass = "st-done";
+
+                html += `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">#${order.id}</span>
+                        <span class="order-date">${order.date}</span>
+                    </div>
+                    <div class="order-body">
+                        <div class="order-info">
+                            <div class="order-title">${order.title}</div>
+                            <div class="order-price">NT$ ${order.price}</div>
+                        </div>
+                        <div class="order-status">
+                            <span class="status-badge ${stClass}">${order.status}</span>
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
