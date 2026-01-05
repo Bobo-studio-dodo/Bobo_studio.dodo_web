@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>包裹回報 | Bobo_studio.dodo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --text-primary: #8a5a6a; --text-secondary: #b38996; --accent-pink: #ff9eb5; --accent-hover: #ff7a96; --bg-main: #fffafc; --bg-card: #ffffff; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: var(--bg-main); color: var(--text-primary); }
+        
+        header { background: rgba(255, 255, 255, 0.9); padding: 0.8rem 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe3ec; }
+        .logo-text { font-weight: bold; font-size: 1.2rem; color: var(--text-primary); }
+        
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem 4rem 1.5rem; }
+        .card { background: var(--bg-card); border-radius: 20px; padding: 2rem; box-shadow: 0 10px 25px rgba(255, 158, 181, 0.15); border: 1px solid #ffe3ec; margin-bottom: 25px; }
+        
+        .btn { background-color: var(--accent-pink); color: white; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; transition: 0.3s; font-size: 1rem; width: 100%; margin-top: 15px; }
+        .btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+        .btn-back { background-color: #eee; color: #666; border: none; padding: 8px 15px; border-radius: 50px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+        .btn-back:hover { background-color: #ddd; }
+
+        .form-label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .form-input { width: 100%; padding: 12px; border: 1px solid #ffe3ec; border-radius: 10px; background: #fffafa; font-size: 1rem; color: #555; }
+        .form-input:focus { outline: none; border-color: var(--accent-pink); background: white; }
+
+        /* 歷史紀錄列表樣式 */
+        .pkg-item { padding: 15px; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; }
+        .pkg-item:last-child { border-bottom: none; }
+        .pkg-info { display: flex; flex-direction: column; gap: 5px; }
+        .pkg-track { font-weight: bold; color: #555; }
+        .pkg-meta { font-size: 0.85rem; color: #999; }
+        .pkg-status { background: #eee; color: #666; padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; font-weight: bold; }
+        .status-received { background: #d4edda; color: #155724; } /* 已入庫綠色 */
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-text">快遞包裹回報</div>
+        <button class="btn-back" onclick="location.href='index.html'">⬅ 回大廳</button>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h3 style="margin-top:0; border-left:4px solid var(--accent-pink); padding-left:10px;">📦 新增包裹回報</h3>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">快遞單號 (Tracking Number) <span style="color:red">*</span></label>
+                <input type="text" id="trackingNum" class="form-input" placeholder="請輸入完整的單號">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">快遞公司 (Carrier)</label>
+                <input type="text" id="carrier" class="form-input" placeholder="例如：中通、圓通、順豐">
+            </div>
+            <div style="margin-bottom:20px;">
+                <label class="form-label">包裹內容/備註</label>
+                <input type="text" id="note" class="form-input" placeholder="例如：衣服 x 3, 易碎品">
+            </div>
+            <button class="btn" onclick="submitPackage()">📤 提交回報單</button>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-top:0; border-left:4px solid #b38996; padding-left:10px;">📋 我的回報紀錄</h3>
+            <div id="loadingText" style="text-align:center; color:#999; padding:20px;">讀取中...</div>
+            <div id="pkgList"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
+            authDomain: "my-shop-2026-1b573.firebaseapp.com",
+            projectId: "my-shop-2026-1b573",
+            storageBucket: "my-shop-2026-1b573.firebasestorage.app",
+            messagingSenderId: "15775390058",
+            appId: "1:15775390058:web:ef08a6b8bca2657ecbed13"
+        };
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzVo9_FACAbkJnnIIXTXu4g4pgCSPKrx9q90Ywd1_rlbXsbmmAmnAprbAbfnB-akdLhtA/exec";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        let currentUserEmail = "";
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserEmail = user.email;
+                loadPackages(); // 登入後自動讀取紀錄
+            } else {
+                alert("請先登入");
+                location.href = "index.html";
+            }
+        });
+
+        // 提交包裹
+        window.submitPackage = async () => {
+            const trackingNum = document.getElementById('trackingNum').value;
+            const carrier = document.getElementById('carrier').value;
+            const note = document.getElementById('note').value;
+
+            if (!trackingNum) { alert("❌ 請務必填寫快遞單號！"); return; }
+
+            const btn = document.querySelector("button[onclick='submitPackage()']");
+            btn.innerText = "提交中..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({
+                        action: "save_package",
+                        email: currentUserEmail,
+                        trackingNum: trackingNum,
+                        carrier: carrier,
+                        note: note
+                    })
+                });
+                const json = await res.json();
+                alert(json.message);
+                
+                // 清空欄位並重新讀取列表
+                document.getElementById('trackingNum').value = "";
+                document.getElementById('carrier').value = "";
+                document.getElementById('note').value = "";
+                loadPackages();
+
+            } catch (e) { alert("連線錯誤"); }
+            finally { btn.innerText = "📤 提交回報單"; btn.disabled = false; }
+        };
+
+        // 讀取列表
+        async function loadPackages() {
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "get_packages", email: currentUserEmail })
+                });
+                const json = await res.json();
+                const list = document.getElementById('pkgList');
+                document.getElementById('loadingText').style.display = 'none';
+
+                if (json.data && json.data.length > 0) {
+                    let html = "";
+                    json.data.forEach(pkg => {
+                        let statusClass = pkg.status.includes("入庫") ? "status-received" : "";
+                        html += `
+                        <div class="pkg-item">
+                            <div class="pkg-info">
+                                <span class="pkg-track">${pkg.trackingNum}</span>
+                                <span style="font-size:0.9rem;">${pkg.carrier || "未填快遞"} | ${pkg.note || "無備註"}</span>
+                                <span class="pkg-meta">${pkg.time.split('T')[0]}</span>
+                            </div>
+                            <div class="pkg-status ${statusClass}">${pkg.status}</div>
+                        </div>`;
+                    });
+                    list.innerHTML = html;
+                } else {
+                    list.innerHTML = '<div style="text-align:center; color:#ccc; padding:20px;">尚無回報紀錄</div>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>
