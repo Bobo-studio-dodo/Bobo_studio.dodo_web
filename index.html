@@ -13,11 +13,27 @@
         .brand-name { font-weight: bold; font-size: 1.3rem; color: #8a5a6a; letter-spacing: 1px; }
         
         .btn { background: var(--accent-pink); color: white; border: none; padding: 10px 20px; border-radius: 50px; cursor: pointer; text-decoration: none; display: inline-block; transition: 0.3s; font-weight: 500;}
-        .btn:hover { background: var(--accent-hover); transform: translateY(-2px); }
+        .btn:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
         
         .hero { text-align: center; padding: 4rem 1rem; min-height: 80vh; display: flex; flex-direction: column; align-items: center; }
         h1 { font-size: 2.2rem; margin-bottom: 0.5rem; color: #8a5a6a; }
         p { color: #b38996; font-size: 1.1rem; margin-bottom: 2rem; }
+
+        /* 波幣顯示區塊 (新增) */
+        .coin-badge {
+            background: #fff;
+            border: 2px solid var(--accent-pink);
+            color: var(--text-primary);
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 5px 15px rgba(255, 158, 181, 0.2);
+        }
 
         /* 儀表板按鈕區 */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 900px; padding: 0 20px; }
@@ -68,6 +84,13 @@
 
     <div class="hero">
         <h1 id="heroTitle">探索您的質感選物</h1>
+        
+        <div id="coinArea" style="display:none;">
+            <div class="coin-badge">
+                💰 波幣餘額：<span id="coinBalance">0</span>
+            </div>
+        </div>
+
         <p id="heroDesc">登入會員以享受專屬服務</p>
         
         <div id="loginArea">
@@ -78,7 +101,6 @@
                 <p style="font-size: 0.95rem; color: #666; margin-bottom: 15px;">
                     點擊下方按鈕查看最新的代購行程、到貨進度與服務條款。
                 </p>
-                
                 <a href="https://literate-alfalfa-4fb.notion.site/25435751b5c080f49428ff40b2a5bf62?v=25435751b5c08177876a000c0ca2f4e9&source=copy_link" target="_blank" class="notion-btn">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" class="notion-icon" alt="Notion">
                     前往 Notion 查看詳細公告
@@ -97,9 +119,7 @@
                 <div class="dash-icon">📄</div><div class="dash-title">我的訂單</div><div class="dash-desc">查詢歷史購買記錄</div>
             </a>
             <a href="package_report.html" class="dash-card">
-                <div class="dash-icon">🚚</div>
-                <div class="dash-title">包裹回報 / 代收</div>
-                <div class="dash-desc">預報快遞單號，追蹤入庫狀態</div>
+                <div class="dash-icon">🚚</div><div class="dash-title">包裹回報 / 代收</div><div class="dash-desc">預報快遞單號，追蹤入庫狀態</div>
             </a>
         </div>
     </div>
@@ -108,7 +128,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // ✅ Config 已填好
         const firebaseConfig = {
             apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
             authDomain: "my-shop-2026-1b573.firebaseapp.com",
@@ -117,33 +136,57 @@
             messagingSenderId: "15775390058",
             appId: "1:15775390058:web:ef08a6b8bca2657ecbed13"
         };
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzVo9_FACAbkJnnIIXTXu4g4pgCSPKrx9q90Ywd1_rlbXsbmmAmnAprbAbfnB-akdLhtA/exec";
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             const nav = document.getElementById('nav-btns');
             const loginArea = document.getElementById('loginArea');
             const dashArea = document.getElementById('dashboardArea');
             const title = document.getElementById('heroTitle');
             const desc = document.getElementById('heroDesc');
+            const coinArea = document.getElementById('coinArea');
+            const coinBalance = document.getElementById('coinBalance');
 
             if (user) {
-                // 已登入
+                // UI 切換為登入狀態
                 nav.innerHTML = `<button id="logoutBtn" class="btn" style="background:#d6a2b1;">登出</button>`;
                 title.innerText = `歡迎回來，${user.displayName}`;
                 desc.innerText = "請選擇您要進行的操作：";
                 loginArea.style.display = 'none';
                 dashArea.style.display = 'grid';
+                
+                // 👇 呼叫後端讀取波幣餘額 👇
+                coinBalance.innerText = "..."; // 讀取中
+                coinArea.style.display = 'block'; // 顯示區塊
+                
+                try {
+                    // 這裡重複呼叫 google_login 是為了拿到最新的 memberInfo
+                    const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "google_login", email: user.email, name: user.displayName }) });
+                    const json = await res.json();
+                    
+                    if(json.data && json.data.boboCoin !== undefined) {
+                        coinBalance.innerText = json.data.boboCoin;
+                    } else {
+                        coinBalance.innerText = "0";
+                    }
+                } catch(e) {
+                    coinBalance.innerText = "-";
+                }
+
                 document.getElementById('logoutBtn').onclick = () => { if(confirm("確定登出？")) signOut(auth).then(()=>location.reload()); };
             } else {
-                // 未登入
+                // UI 切換為未登入
                 nav.innerHTML = `<button id="navLoginBtn" class="btn">登入</button>`;
                 title.innerText = "探索您的質感選物";
                 desc.innerText = "登入會員以填寫寄送資料，享受專屬服務。";
                 loginArea.style.display = 'block';
                 dashArea.style.display = 'none';
+                coinArea.style.display = 'none'; // 隱藏波幣
+                
                 const doLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
                 document.getElementById('mainLoginBtn').onclick = doLogin;
                 document.getElementById('navLoginBtn').onclick = doLogin;
@@ -151,5 +194,4 @@
         });
     </script>
 </body>
-
 </html>
