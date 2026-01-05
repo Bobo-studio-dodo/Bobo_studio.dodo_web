@@ -28,11 +28,21 @@
         /* 歷史紀錄列表樣式 */
         .pkg-item { padding: 15px; border-bottom: 1px dashed #eee; display: flex; justify-content: space-between; align-items: center; }
         .pkg-item:last-child { border-bottom: none; }
-        .pkg-info { display: flex; flex-direction: column; gap: 5px; }
-        .pkg-track { font-weight: bold; color: #555; }
-        .pkg-meta { font-size: 0.85rem; color: #999; }
-        .pkg-status { background: #eee; color: #666; padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; font-weight: bold; }
-        .status-received { background: #d4edda; color: #155724; } /* 已入庫綠色 */
+        
+        .pkg-info { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+        .pkg-track { font-weight: bold; color: #555; font-size: 1.05rem; }
+        .pkg-meta { font-size: 0.9rem; color: #888; }
+        .pkg-weight { font-size: 0.9rem; color: #e67e22; font-weight: bold; margin-left: 5px; background: #fff3e0; padding: 2px 6px; border-radius: 4px; }
+
+        .pkg-status-col { text-align: right; min-width: 80px; }
+        .pkg-status { display: inline-block; padding: 5px 12px; border-radius: 15px; font-size: 0.85rem; font-weight: bold; color: white; }
+        
+        /* 狀態顏色定義 */
+        .st-default { background-color: #95a5a6; } /* 待入庫 (灰) */
+        .st-in { background-color: #27ae60; }      /* 已入庫 (綠) */
+        .st-shipping { background-color: #2980b9; } /* 集運中 (藍) */
+        .st-packing { background-color: #f39c12; }  /* 整理中 (橘) */
+        .st-out { background-color: #8e44ad; }      /* 已出貨 (紫) */
     </style>
 </head>
 <body>
@@ -71,6 +81,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+        // ✅ Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
             authDomain: "my-shop-2026-1b573.firebaseapp.com",
@@ -88,14 +99,13 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserEmail = user.email;
-                loadPackages(); // 登入後自動讀取紀錄
+                loadPackages(); 
             } else {
                 alert("請先登入");
                 location.href = "index.html";
             }
         });
 
-        // 提交包裹
         window.submitPackage = async () => {
             const trackingNum = document.getElementById('trackingNum').value;
             const carrier = document.getElementById('carrier').value;
@@ -120,7 +130,6 @@
                 const json = await res.json();
                 alert(json.message);
                 
-                // 清空欄位並重新讀取列表
                 document.getElementById('trackingNum').value = "";
                 document.getElementById('carrier').value = "";
                 document.getElementById('note').value = "";
@@ -130,7 +139,6 @@
             finally { btn.innerText = "📤 提交回報單"; btn.disabled = false; }
         };
 
-        // 讀取列表
         async function loadPackages() {
             try {
                 const res = await fetch(GAS_URL, {
@@ -144,15 +152,30 @@
                 if (json.data && json.data.length > 0) {
                     let html = "";
                     json.data.forEach(pkg => {
-                        let statusClass = pkg.status.includes("入庫") ? "status-received" : "";
+                        // 狀態顏色判斷
+                        let stClass = "st-default";
+                        if (pkg.status.includes("已入庫")) stClass = "st-in";
+                        else if (pkg.status.includes("集運中")) stClass = "st-shipping";
+                        else if (pkg.status.includes("整理中")) stClass = "st-packing";
+                        else if (pkg.status.includes("已出貨")) stClass = "st-out";
+
+                        // 重量顯示判斷
+                        let weightHtml = pkg.weight ? `<span class="pkg-weight">⚖️ ${pkg.weight} KG</span>` : "";
+
                         html += `
                         <div class="pkg-item">
                             <div class="pkg-info">
-                                <span class="pkg-track">${pkg.trackingNum}</span>
-                                <span style="font-size:0.9rem;">${pkg.carrier || "未填快遞"} | ${pkg.note || "無備註"}</span>
-                                <span class="pkg-meta">${pkg.time.split('T')[0]}</span>
+                                <div class="pkg-track">
+                                    ${pkg.trackingNum} 
+                                    ${weightHtml}
+                                </div>
+                                <div class="pkg-meta">
+                                    ${pkg.carrier || "未填快遞"} | ${pkg.note || "無備註"} | ${pkg.time.split('T')[0]}
+                                </div>
                             </div>
-                            <div class="pkg-status ${statusClass}">${pkg.status}</div>
+                            <div class="pkg-status-col">
+                                <span class="pkg-status ${stClass}">${pkg.status}</span>
+                            </div>
                         </div>`;
                     });
                     list.innerHTML = html;
