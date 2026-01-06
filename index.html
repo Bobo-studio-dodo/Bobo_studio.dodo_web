@@ -23,45 +23,27 @@
         .coin-badge { background: #fff; border: 2px solid var(--accent-pink); color: var(--text-primary); padding: 10px 25px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(255, 158, 181, 0.2); }
 
         /* 儀表板按鈕區 */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 900px; padding: 0 20px; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 900px; padding: 0 20px; margin-bottom: 40px; }
         .dash-card { background: white; padding: 30px 20px; border-radius: 20px; text-decoration: none; color: var(--text-primary); box-shadow: 0 10px 20px rgba(255, 158, 181, 0.15); border: 2px solid transparent; transition: 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .dash-card:hover { transform: translateY(-5px); border-color: var(--accent-pink); box-shadow: 0 15px 30px rgba(255, 158, 181, 0.25); }
         .dash-icon { font-size: 3rem; margin-bottom: 15px; }
 
-        /* 👇 復原：Notion 公告區塊樣式 👇 */
-        .notion-box { margin-top: 40px; background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-width: 600px; width: 90%; border: 1px solid #ffe3ec; }
+        /* Notion 公告區塊 */
+        .notion-box { background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-width: 600px; width: 90%; border: 1px solid #ffe3ec; }
         .notion-btn { background-color: #ffffff; color: #333; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 20px; border-radius: 8px; text-decoration: none; transition: 0.3s; font-weight: bold; margin-top: 10px; }
         .notion-btn:hover { background-color: #f7f7f7; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .notion-icon { width: 24px; height: 24px; }
 
-        /* 同意條款模態視窗 (Modal) */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center; align-items: center; z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
-        .modal-card {
-            background: white; width: 90%; max-width: 500px; padding: 40px;
-            border-radius: 20px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            animation: popIn 0.3s ease-out;
-        }
+        /* 同意條款模態視窗 */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal-card { background: white; width: 90%; max-width: 500px; padding: 40px; border-radius: 20px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); animation: popIn 0.3s ease-out; }
         @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        
         .modal-title { font-size: 1.8rem; font-weight: bold; color: #333; margin-bottom: 10px; }
         .modal-desc { color: #666; margin-bottom: 30px; line-height: 1.6; }
         .terms-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
         .term-btn { background: #fff; border: 1px solid #eee; padding: 10px 20px; border-radius: 8px; text-decoration: none; color: #555; font-size: 0.9rem; transition: 0.2s; }
         .term-btn:hover { background: #f9f9f9; border-color: #ddd; }
-
-        .agree-btn {
-            background-color: var(--green-btn); color: white; border: none;
-            padding: 15px 40px; border-radius: 8px; font-size: 1.1rem;
-            cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s;
-            box-shadow: 0 5px 15px rgba(92, 189, 104, 0.3);
-        }
+        .agree-btn { background-color: var(--green-btn); color: white; border: none; padding: 15px 40px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; box-shadow: 0 5px 15px rgba(92, 189, 104, 0.3); }
         .agree-btn:hover { background-color: var(--green-hover); transform: translateY(-2px); }
         .agree-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
     </style>
@@ -73,8 +55,8 @@
         <div id="nav-btns"></div>
     </header>
 
-    <div class="hero">波波小站歡迎您
-        <h1 id="heroTitle">h11
+    <div class="hero">
+        <h1 id="heroTitle">探索您的質感選物</h1>
         
         <div id="coinArea" style="display:none;">
             <div class="coin-badge">💰 波幣餘額：<span id="coinBalance">0</span></div>
@@ -83,15 +65,7 @@
         <p id="heroDesc">登入會員以享受專屬服務</p>
         
         <div id="loginArea">
-            <button id="mainLoginBtn" class="btn" style="padding: 15px 50px; font-size: 1.2rem;">🚀 立即登入 / 註冊</button>
-            
-            <div class="notion-box">
-                <h3 style="margin: 0 0 10px 0; color: #8a5a6a;">📢 賣場最新公告</h3>
-                <p style="font-size: 0.95rem; color: #666; margin-bottom: 15px;">點擊下方按鈕查看最新的代購行程、到貨進度與服務條款。</p>
-                <a href="https://literate-alfalfa-4fb.notion.site/25435751b5c080f49428ff40b2a5bf62?v=25435751b5c08177876a000c0ca2f4e9&source=copy_link" target="_blank" class="notion-btn">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" class="notion-icon" alt="Notion">前往 Notion 查看詳細公告
-                </a>
-            </div>
+            <button id="mainLoginBtn" class="btn" style="padding: 15px 50px; font-size: 1.2rem; margin-bottom:30px;">🚀 立即登入 / 註冊</button>
         </div>
 
         <div id="dashboardArea" class="dashboard-grid" style="display:none;">
@@ -100,18 +74,25 @@
             <a href="orders.html" class="dash-card"><div class="dash-icon">📄</div><div class="dash-title">我的訂單</div><div class="dash-desc">查詢歷史購買記錄</div></a>
             <a href="package_report.html" class="dash-card"><div class="dash-icon">🚚</div><div class="dash-title">包裹回報 / 代收</div><div class="dash-desc">預報快遞單號，追蹤入庫狀態</div></a>
         </div>
+
+        <div class="notion-box">
+            <h3 style="margin: 0 0 10px 0; color: #8a5a6a;">📢 賣場最新公告</h3>
+            <p style="font-size: 0.95rem; color: #666; margin-bottom: 15px;">點擊下方按鈕查看最新的代購行程、到貨進度與服務條款。</p>
+            <a href="https://literate-alfalfa-4fb.notion.site/25435751b5c080f49428ff40b2a5bf62?v=25435751b5c08177876a000c0ca2f4e9&source=copy_link" target="_blank" class="notion-btn">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" class="notion-icon" alt="Notion">前往 Notion 查看詳細公告
+            </a>
+        </div>
+
     </div>
 
     <div id="termsModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-title">開始使用</div>
             <div class="modal-desc">若希望繼續使用，請先閱讀並同意服務條款和隱私權政策。</div>
-            
             <div class="terms-links">
                 <a href="terms.html" target="_blank" class="term-btn">服務條款</a>
                 <a href="privacy.html" target="_blank" class="term-btn">隱私權政策</a>
             </div>
-
             <button id="agreeBtn" class="agree-btn" onclick="userAgree()">同意並繼續</button>
         </div>
     </div>
@@ -152,17 +133,16 @@
 
                 title.innerText = `歡迎回來，${user.displayName}`;
                 desc.innerText = "資料讀取中...";
-                loginArea.style.display = 'none'; // 登入後隱藏登入鈕與公告
+                loginArea.style.display = 'none'; // 只隱藏登入按鈕，不影響公告了
                 
                 try {
                     const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "google_login", email: user.email, name: user.displayName }) });
                     const json = await res.json();
                     
-                    // 🟢 檢查狀態 🟢
                     const status = json.data.status || "未開通";
 
                     if (status === "未開通") {
-                        termsModal.style.display = 'flex'; // 顯示條款視窗
+                        termsModal.style.display = 'flex';
                         dashArea.style.display = 'none';
                         coinArea.style.display = 'none';
                         desc.innerText = "請先完成帳號開通";
@@ -180,11 +160,10 @@
                 }
 
             } else {
-                // 未登入狀態
                 nav.innerHTML = `<button id="navLoginBtn" class="btn">登入</button>`;
-                title.innerText = "探索您的選物";
-                desc.innerText = "登入會員享受專屬服務。";
-                loginArea.style.display = 'block'; // 未登入顯示公告
+                title.innerText = "探索您的質感選物";
+                desc.innerText = "登入會員以填寫寄送資料，享受專屬服務。";
+                loginArea.style.display = 'block';
                 dashArea.style.display = 'none';
                 coinArea.style.display = 'none';
                 termsModal.style.display = 'none';
