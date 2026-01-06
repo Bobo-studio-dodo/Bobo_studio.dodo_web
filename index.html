@@ -46,6 +46,26 @@
         .agree-btn { background-color: var(--green-btn); color: white; border: none; padding: 15px 40px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s; box-shadow: 0 5px 15px rgba(92, 189, 104, 0.3); }
         .agree-btn:hover { background-color: var(--green-hover); transform: translateY(-2px); }
         .agree-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+
+        /* ===== Hero Logo（新增，不影響任何原本樣式） ===== */
+        .hero-logo {
+            width: 100%;
+            max-width: 260px;   /* ⭐ 已幫你縮小 */
+            margin-bottom: 16px;
+        }
+
+        .hero-logo img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 12px 25px rgba(255, 158, 181, 0.35);
+        }
+        @media (max-width: 600px) {
+            .hero-logo {
+                max-width: 210px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -56,6 +76,9 @@
     </header>
 
     <div class="hero">
+        <div class="hero-logo">
+            <img src="images/logo.png" alt="Bobo 波波代購小站">
+        </div>
         <h1 id="heroTitle">探索您的質感選物</h1>
         
         <div id="coinArea" style="display:none;">
