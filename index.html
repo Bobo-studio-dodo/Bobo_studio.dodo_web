@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bobo_studio.dodo | 代購 | 選物</title>
+    <title>Bobo_studio.dodo | 質感選物</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --accent-pink: #ff9eb5; --accent-hover: #ff7a96; --bg-main: #fffafc; --text-primary: #8a5a6a; }
+        :root { --accent-pink: #ff9eb5; --accent-hover: #ff7a96; --bg-main: #fffafc; --text-primary: #8a5a6a; --green-btn: #5cbd68; --green-hover: #4cae58; }
         body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: var(--bg-main); color: var(--text-primary); }
         
         header { padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100;}
@@ -19,60 +19,53 @@
         h1 { font-size: 2.2rem; margin-bottom: 0.5rem; color: #8a5a6a; }
         p { color: #b38996; font-size: 1.1rem; margin-bottom: 2rem; }
 
-        /* 波幣顯示區塊 (新增) */
-        .coin-badge {
-            background: #fff;
-            border: 2px solid var(--accent-pink);
-            color: var(--text-primary);
-            padding: 10px 25px;
-            border-radius: 50px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 25px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 5px 15px rgba(255, 158, 181, 0.2);
-        }
+        /* 波幣顯示區塊 */
+        .coin-badge { background: #fff; border: 2px solid var(--accent-pink); color: var(--text-primary); padding: 10px 25px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(255, 158, 181, 0.2); }
 
         /* 儀表板按鈕區 */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 900px; padding: 0 20px; }
-        .dash-card { 
-            background: white; padding: 30px 20px; border-radius: 20px; text-decoration: none; color: var(--text-primary);
-            box-shadow: 0 10px 20px rgba(255, 158, 181, 0.15); border: 2px solid transparent; transition: 0.3s;
-            display: flex; flex-direction: column; align-items: center; text-align: center;
-        }
+        .dash-card { background: white; padding: 30px 20px; border-radius: 20px; text-decoration: none; color: var(--text-primary); box-shadow: 0 10px 20px rgba(255, 158, 181, 0.15); border: 2px solid transparent; transition: 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .dash-card:hover { transform: translateY(-5px); border-color: var(--accent-pink); box-shadow: 0 15px 30px rgba(255, 158, 181, 0.25); }
         .dash-icon { font-size: 3rem; margin-bottom: 15px; }
-        
+
         /* Notion 公告區塊 */
-        .notion-box {
-            margin-top: 40px;
-            background: #fff;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            max-width: 600px;
-            width: 90%;
-            border: 1px solid #ffe3ec;
-        }
-        .notion-btn {
-            background-color: #ffffff;
-            color: #333;
-            border: 1px solid #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            text-decoration: none;
-            transition: 0.3s;
-            font-weight: bold;
-            margin-top: 10px;
-        }
+        .notion-box { margin-top: 40px; background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-width: 600px; width: 90%; border: 1px solid #ffe3ec; }
+        .notion-btn { background-color: #ffffff; color: #333; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 20px; border-radius: 8px; text-decoration: none; transition: 0.3s; font-weight: bold; margin-top: 10px; }
         .notion-btn:hover { background-color: #f7f7f7; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .notion-icon { width: 24px; height: 24px; }
+
+        /* 👇 新增：同意條款模態視窗 (Modal) 👇 */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* 半透明黑底 */
+            display: none; /* 預設隱藏 */
+            justify-content: center; align-items: center; z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-card {
+            background: white; width: 90%; max-width: 500px; padding: 40px;
+            border-radius: 20px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            animation: popIn 0.3s ease-out;
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .modal-title { font-size: 1.8rem; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .modal-desc { color: #666; margin-bottom: 30px; line-height: 1.6; }
+        
+        .terms-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .term-btn { background: #fff; border: 1px solid #eee; padding: 10px 20px; border-radius: 8px; text-decoration: none; color: #555; font-size: 0.9rem; transition: 0.2s; }
+        .term-btn:hover { background: #f9f9f9; border-color: #ddd; }
+
+        .agree-btn {
+            background-color: var(--green-btn); color: white; border: none;
+            padding: 15px 40px; border-radius: 8px; font-size: 1.1rem;
+            cursor: pointer; width: 100%; font-weight: bold; transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(92, 189, 104, 0.3);
+        }
+        .agree-btn:hover { background-color: var(--green-hover); transform: translateY(-2px); }
+        .agree-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
+
     </style>
 </head>
 <body>
@@ -82,13 +75,10 @@
         <div id="nav-btns"></div>
     </header>
 
-    <div class="hero">
-        <h1 id="heroTitle">波波代購小站歡迎您的加入 </h1>
+    <div class="hero">波波代購小站歡迎您 <h1 id="heroTitle">h11
         
         <div id="coinArea" style="display:none;">
-            <div class="coin-badge">
-                💰 波幣餘額：<span id="coinBalance">0</span>
-            </div>
+            <div class="coin-badge">💰 波幣餘額：<span id="coinBalance">0</span></div>
         </div>
 
         <p id="heroDesc">登入會員以享受專屬服務</p>
@@ -98,29 +88,32 @@
             
             <div class="notion-box">
                 <h3 style="margin: 0 0 10px 0; color: #8a5a6a;">📢 賣場最新公告</h3>
-                <p style="font-size: 0.95rem; color: #666; margin-bottom: 15px;">
-                    點擊下方按鈕查看最新的代購行程、到貨進度與服務條款。
-                </p>
+                <p style="font-size: 0.95rem; color: #666; margin-bottom: 15px;">點擊下方按鈕查看最新的代購行程、到貨進度與服務條款。</p>
                 <a href="https://literate-alfalfa-4fb.notion.site/25435751b5c080f49428ff40b2a5bf62?v=25435751b5c08177876a000c0ca2f4e9&source=copy_link" target="_blank" class="notion-btn">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" class="notion-icon" alt="Notion">
-                    前往 Notion 查看詳細公告
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" class="notion-icon" alt="Notion">前往 Notion 查看詳細公告
                 </a>
             </div>
         </div>
 
         <div id="dashboardArea" class="dashboard-grid" style="display:none;">
-            <a href="member.html" class="dash-card">
-                <div class="dash-icon">📝</div><div class="dash-title">會員基本資料</div><div class="dash-desc">修改姓名、電話、銀行帳戶</div>
-            </a>
-            <a href="shipping.html" class="dash-card">
-                <div class="dash-icon">📦</div><div class="dash-title">寄件資料設定</div><div class="dash-desc">設定 7-11 門市與郵寄地址</div>
-            </a>
-            <a href="orders.html" class="dash-card">
-                <div class="dash-icon">📄</div><div class="dash-title">我的訂單</div><div class="dash-desc">查詢歷史購買記錄</div>
-            </a>
-            <a href="package_report.html" class="dash-card">
-                <div class="dash-icon">🚚</div><div class="dash-title">包裹回報 / 代收</div><div class="dash-desc">預報快遞單號，追蹤入庫狀態</div>
-            </a>
+            <a href="member.html" class="dash-card"><div class="dash-icon">📝</div><div class="dash-title">會員基本資料</div><div class="dash-desc">修改姓名、電話、銀行帳戶</div></a>
+            <a href="shipping.html" class="dash-card"><div class="dash-icon">📦</div><div class="dash-title">寄件資料設定</div><div class="dash-desc">設定 7-11 門市與郵寄地址</div></a>
+            <a href="orders.html" class="dash-card"><div class="dash-icon">📄</div><div class="dash-title">我的訂單</div><div class="dash-desc">查詢歷史購買記錄</div></a>
+            <a href="package_report.html" class="dash-card"><div class="dash-icon">🚚</div><div class="dash-title">包裹回報 / 代收</div><div class="dash-desc">預報快遞單號，追蹤入庫狀態</div></a>
+        </div>
+    </div>
+
+    <div id="termsModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-title">開始使用</div>
+            <div class="modal-desc">若希望繼續使用，請先閱讀並同意服務條款和隱私權政策。</div>
+            
+            <div class="terms-links">
+                <a href="terms.html" target="_blank" class="term-btn">服務條款</a>
+                <a href="privacy.html" target="_blank" class="term-btn">隱私權政策</a>
+            </div>
+
+            <button id="agreeBtn" class="agree-btn" onclick="userAgree()">同意並繼續</button>
         </div>
     </div>
 
@@ -141,6 +134,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
+        let currentUserEmail = "";
 
         onAuthStateChanged(auth, async (user) => {
             const nav = document.getElementById('nav-btns');
@@ -150,49 +144,93 @@
             const desc = document.getElementById('heroDesc');
             const coinArea = document.getElementById('coinArea');
             const coinBalance = document.getElementById('coinBalance');
+            const termsModal = document.getElementById('termsModal');
 
             if (user) {
-                // UI 切換為登入狀態
+                currentUserEmail = user.email;
                 nav.innerHTML = `<button id="logoutBtn" class="btn" style="background:#d6a2b1;">登出</button>`;
+                document.getElementById('logoutBtn').onclick = () => { if(confirm("確定登出？")) signOut(auth).then(()=>location.reload()); };
+
+                // 登入後先顯示 "讀取中..." 狀態
                 title.innerText = `歡迎回來，${user.displayName}`;
-                desc.innerText = "請選擇您要進行的操作：";
+                desc.innerText = "資料讀取中...";
                 loginArea.style.display = 'none';
-                dashArea.style.display = 'grid';
-                
-                // 👇 呼叫後端讀取波幣餘額 👇
-                coinBalance.innerText = "..."; // 讀取中
-                coinArea.style.display = 'block'; // 顯示區塊
                 
                 try {
-                    // 這裡重複呼叫 google_login 是為了拿到最新的 memberInfo
+                    // 呼叫 GAS 檢查會員狀態
                     const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "google_login", email: user.email, name: user.displayName }) });
                     const json = await res.json();
                     
-                    if(json.data && json.data.boboCoin !== undefined) {
-                        coinBalance.innerText = json.data.boboCoin;
+                    // 🟢 檢查狀態邏輯 🟢
+                    const status = json.data.status || "未開通"; // 如果沒有狀態，預設未開通
+
+                    if (status === "未開通") {
+                        // 👉 新會員或未同意過：顯示 Modal，不顯示儀表板
+                        termsModal.style.display = 'flex';
+                        dashArea.style.display = 'none';
+                        coinArea.style.display = 'none';
+                        desc.innerText = "請先完成帳號開通";
                     } else {
-                        coinBalance.innerText = "0";
+                        // 👉 老會員：直接顯示儀表板
+                        termsModal.style.display = 'none';
+                        dashArea.style.display = 'grid';
+                        coinArea.style.display = 'block';
+                        desc.innerText = "請選擇您要進行的操作：";
+                        coinBalance.innerText = (json.data.boboCoin !== undefined) ? json.data.boboCoin : "0";
                     }
+
                 } catch(e) {
-                    coinBalance.innerText = "-";
+                    console.error(e);
+                    desc.innerText = "連線錯誤，請重新整理";
                 }
 
-                document.getElementById('logoutBtn').onclick = () => { if(confirm("確定登出？")) signOut(auth).then(()=>location.reload()); };
             } else {
-                // UI 切換為未登入
+                // 未登入狀態
                 nav.innerHTML = `<button id="navLoginBtn" class="btn">登入</button>`;
-                title.innerText = "探索您的質感選物";
+                title.innerText = "探索您的星球";
                 desc.innerText = "登入會員以享受專屬服務。";
                 loginArea.style.display = 'block';
                 dashArea.style.display = 'none';
-                coinArea.style.display = 'none'; // 隱藏波幣
+                coinArea.style.display = 'none';
+                termsModal.style.display = 'none';
                 
                 const doLogin = () => signInWithPopup(auth, provider).catch(e => alert(e.message));
                 document.getElementById('mainLoginBtn').onclick = doLogin;
                 document.getElementById('navLoginBtn').onclick = doLogin;
             }
         });
+
+        // 🟢 全域函數：處理 "同意並繼續" 點擊
+        window.userAgree = async () => {
+            const btn = document.getElementById('agreeBtn');
+            const originalText = btn.innerText;
+            btn.innerText = "處理中...";
+            btn.disabled = true;
+
+            try {
+                // 呼叫 GAS 更新狀態為 "已開通"
+                const res = await fetch(GAS_URL, { 
+                    method: "POST", 
+                    body: JSON.stringify({ action: "agree_terms", email: currentUserEmail }) 
+                });
+                const json = await res.json();
+
+                if (json.status === "success") {
+                    // 成功後：關閉 Modal，顯示儀表板
+                    document.getElementById('termsModal').style.display = 'none';
+                    document.getElementById('dashboardArea').style.display = 'grid';
+                    document.getElementById('coinArea').style.display = 'block';
+                    document.getElementById('heroDesc').innerText = "請選擇您要進行的操作：";
+                } else {
+                    alert("發生錯誤：" + json.message);
+                }
+            } catch (e) {
+                alert("連線失敗，請檢查網路");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        };
     </script>
 </body>
 </html>
-
