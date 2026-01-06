@@ -28,17 +28,17 @@
         .dash-card:hover { transform: translateY(-5px); border-color: var(--accent-pink); box-shadow: 0 15px 30px rgba(255, 158, 181, 0.25); }
         .dash-icon { font-size: 3rem; margin-bottom: 15px; }
 
-        /* Notion 公告區塊 */
+        /* 👇 復原：Notion 公告區塊樣式 👇 */
         .notion-box { margin-top: 40px; background: #fff; padding: 25px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-width: 600px; width: 90%; border: 1px solid #ffe3ec; }
         .notion-btn { background-color: #ffffff; color: #333; border: 1px solid #ddd; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 20px; border-radius: 8px; text-decoration: none; transition: 0.3s; font-weight: bold; margin-top: 10px; }
         .notion-btn:hover { background-color: #f7f7f7; transform: translateY(-2px); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
         .notion-icon { width: 24px; height: 24px; }
 
-        /* 👇 新增：同意條款模態視窗 (Modal) 👇 */
+        /* 同意條款模態視窗 (Modal) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5); /* 半透明黑底 */
-            display: none; /* 預設隱藏 */
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
             justify-content: center; align-items: center; z-index: 1000;
             backdrop-filter: blur(5px);
         }
@@ -52,7 +52,6 @@
         
         .modal-title { font-size: 1.8rem; font-weight: bold; color: #333; margin-bottom: 10px; }
         .modal-desc { color: #666; margin-bottom: 30px; line-height: 1.6; }
-        
         .terms-links { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
         .term-btn { background: #fff; border: 1px solid #eee; padding: 10px 20px; border-radius: 8px; text-decoration: none; color: #555; font-size: 0.9rem; transition: 0.2s; }
         .term-btn:hover { background: #f9f9f9; border-color: #ddd; }
@@ -65,7 +64,6 @@
         }
         .agree-btn:hover { background-color: var(--green-hover); transform: translateY(-2px); }
         .agree-btn:disabled { background-color: #ccc; cursor: not-allowed; box-shadow: none; }
-
     </style>
 </head>
 <body>
@@ -75,7 +73,8 @@
         <div id="nav-btns"></div>
     </header>
 
-    <div class="hero">波波代購小站歡迎您 <h1 id="heroTitle">h11
+    <div class="hero">波波小站歡迎您
+        <h1 id="heroTitle">h11
         
         <div id="coinArea" style="display:none;">
             <div class="coin-badge">💰 波幣餘額：<span id="coinBalance">0</span></div>
@@ -151,27 +150,23 @@
                 nav.innerHTML = `<button id="logoutBtn" class="btn" style="background:#d6a2b1;">登出</button>`;
                 document.getElementById('logoutBtn').onclick = () => { if(confirm("確定登出？")) signOut(auth).then(()=>location.reload()); };
 
-                // 登入後先顯示 "讀取中..." 狀態
                 title.innerText = `歡迎回來，${user.displayName}`;
                 desc.innerText = "資料讀取中...";
-                loginArea.style.display = 'none';
+                loginArea.style.display = 'none'; // 登入後隱藏登入鈕與公告
                 
                 try {
-                    // 呼叫 GAS 檢查會員狀態
                     const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "google_login", email: user.email, name: user.displayName }) });
                     const json = await res.json();
                     
-                    // 🟢 檢查狀態邏輯 🟢
-                    const status = json.data.status || "未開通"; // 如果沒有狀態，預設未開通
+                    // 🟢 檢查狀態 🟢
+                    const status = json.data.status || "未開通";
 
                     if (status === "未開通") {
-                        // 👉 新會員或未同意過：顯示 Modal，不顯示儀表板
-                        termsModal.style.display = 'flex';
+                        termsModal.style.display = 'flex'; // 顯示條款視窗
                         dashArea.style.display = 'none';
                         coinArea.style.display = 'none';
                         desc.innerText = "請先完成帳號開通";
                     } else {
-                        // 👉 老會員：直接顯示儀表板
                         termsModal.style.display = 'none';
                         dashArea.style.display = 'grid';
                         coinArea.style.display = 'block';
@@ -187,9 +182,9 @@
             } else {
                 // 未登入狀態
                 nav.innerHTML = `<button id="navLoginBtn" class="btn">登入</button>`;
-                title.innerText = "探索您的星球";
-                desc.innerText = "登入會員以享受專屬服務。";
-                loginArea.style.display = 'block';
+                title.innerText = "探索您的選物";
+                desc.innerText = "登入會員享受專屬服務。";
+                loginArea.style.display = 'block'; // 未登入顯示公告
                 dashArea.style.display = 'none';
                 coinArea.style.display = 'none';
                 termsModal.style.display = 'none';
@@ -200,7 +195,6 @@
             }
         });
 
-        // 🟢 全域函數：處理 "同意並繼續" 點擊
         window.userAgree = async () => {
             const btn = document.getElementById('agreeBtn');
             const originalText = btn.innerText;
@@ -208,7 +202,6 @@
             btn.disabled = true;
 
             try {
-                // 呼叫 GAS 更新狀態為 "已開通"
                 const res = await fetch(GAS_URL, { 
                     method: "POST", 
                     body: JSON.stringify({ action: "agree_terms", email: currentUserEmail }) 
@@ -216,7 +209,6 @@
                 const json = await res.json();
 
                 if (json.status === "success") {
-                    // 成功後：關閉 Modal，顯示儀表板
                     document.getElementById('termsModal').style.display = 'none';
                     document.getElementById('dashboardArea').style.display = 'grid';
                     document.getElementById('coinArea').style.display = 'block';
