@@ -134,7 +134,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // ✅ 您的 Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
             authDomain: "my-shop-2026-1b573.firebaseapp.com",
@@ -144,7 +143,6 @@
             appId: "1:15775390058:web:ef08a6b8bca2657ecbed13"
         };
         
-        // ✅ 您的 GAS 後端網址
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzVo9_FACAbkJnnIIXTXu4g4pgCSPKrx9q90Ywd1_rlbXsbmmAmnAprbAbfnB-akdLhtA/exec";
 
         const app = initializeApp(firebaseConfig);
@@ -155,16 +153,25 @@
             if (user) {
                 currentUserEmail = user.email;
                 try {
-                    // 1. 抓取基本資料 (為了拿真實姓名)
+                    // 1. 抓取基本資料 (用來檢查資格 & 取得姓名)
                     const resMember = await fetch(GAS_URL, { method: "POST", body: JSON.stringify({ action: "google_login", email: user.email, name: user.displayName }) });
                     const jsonMember = await resMember.json();
                     
-                    let realName = user.displayName; // 預設用 Google 暱稱
-                    if(jsonMember.data && jsonMember.data.name) {
-                        realName = jsonMember.data.name;
-                    } else {
-                        alert("⚠️ 提醒：您尚未填寫「會員基本資料」，建議先至會員中心填寫，這裡才會自動帶入正確姓名！");
+                    // 👇👇👇 修正後的擋修邏輯 👇👇👇
+                    // 不檢查 name (因為會有 Google 預設值)，改檢查 phone (電話)
+                    // 如果後端回傳的資料沒有 phone，代表他還沒填過會員資料
+                    if (!jsonMember.data || !jsonMember.data.phone) {
+                        alert("⛔ 抱歉！為了確保出貨權益\n\n系統檢測到您尚未填寫「手機號碼」，\n請先前往「會員基本資料」完成填寫，\n才能設定寄件資料喔！");
+                        
+                        // 強制跳轉回會員中心
+                        location.href = "member.html"; 
+                        return; // 停止執行，不讓他看到表單
                     }
+                    // 👆👆👆 修正結束 👆👆👆
+
+                    // 既然有電話，代表也有真實姓名了 (因為是必填)，優先使用資料庫的名字
+                    // 如果真的萬一沒有，才用 Google 暱稱 (user.displayName) 當備案
+                    let realName = jsonMember.data.name || user.displayName;
                     
                     document.getElementById('shipName').value = realName;
                     document.getElementById('postalName').value = realName;
@@ -180,7 +187,7 @@
                         if(jsonShip.data.storeName) document.getElementById('storeName').value = jsonShip.data.storeName;
                         
                         // 填入郵寄資料
-                        if(jsonShip.data.phone) document.getElementById('postalPhone').value = jsonShip.data.phone; // 共用電話
+                        if(jsonShip.data.phone) document.getElementById('postalPhone').value = jsonShip.data.phone;
                         if(jsonShip.data.postalZip) document.getElementById('postalZip').value = jsonShip.data.postalZip;
                         if(jsonShip.data.postalAddr) document.getElementById('postalAddr').value = jsonShip.data.postalAddr;
                         if(jsonShip.data.postalAction) {
@@ -237,15 +244,11 @@
             const payload = {
                 action: "save_shipping",
                 email: currentUserEmail,
-                type: type, // 告訴後端是存 'store' 還是 'postal'
-                recipient: document.getElementById('shipName').value, // 姓名是共用的
+                type: type, 
+                recipient: document.getElementById('shipName').value, 
                 phone: type === 'store' ? document.getElementById('shipPhone').value : document.getElementById('postalPhone').value,
-                
-                // 超商欄位
                 storeCode: document.getElementById('storeCode').value,
                 storeName: document.getElementById('storeName').value,
-                
-                // 郵寄欄位
                 postalZip: document.getElementById('postalZip').value,
                 postalAddr: document.getElementById('postalAddr').value,
                 postalAction: document.querySelector('input[name="postalAction"]:checked').value
