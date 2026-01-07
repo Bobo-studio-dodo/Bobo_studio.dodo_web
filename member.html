@@ -70,11 +70,14 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        
         const firebaseConfig = { apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw", authDomain: "my-shop-2026-1b573.firebaseapp.com", projectId: "my-shop-2026-1b573", storageBucket: "my-shop-2026-1b573.firebasestorage.app", messagingSenderId: "15775390058", appId: "1:15775390058:web:ef08a6b8bca2657ecbed13" };
         const GAS_URL = "https://script.google.com/macros/s/AKfycbzVo9_FACAbkJnnIIXTXu4g4pgCSPKrx9q90Ywd1_rlbXsbmmAmnAprbAbfnB-akdLhtA/exec";
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         let currentUserEmail = "";
+        
         document.getElementById('dob').setAttribute('max', new Date().toISOString().split("T")[0]);
 
         onAuthStateChanged(auth, async (user) => {
@@ -87,27 +90,91 @@
                     fillForm(json.data);
                     document.getElementById('loadingOverlay').style.display = 'none';
                     document.getElementById('formCard').style.display = 'block';
-                } catch (e) { alert("讀取資料失敗"); }
+                } catch (e) { alert("讀取資料失敗"); console.error(e); }
             } else { alert("請先登入"); location.href = "index.html"; }
         });
+
+        // 智慧填表 (包含單引號過濾)
+        function fillForm(data) {
+            const clean = (val) => val ? String(val).replace(/^'/, '') : "";
+
+            if(data.id) document.getElementById('memberId').value = data.id || "未核發";
+            if(data.name) document.getElementById('realName').value = clean(data.name);
+            
+            if(data.birthday) {
+                let dateStr = clean(data.birthday);
+                if(dateStr.includes("T")) dateStr = dateStr.split("T")[0];
+                document.getElementById('dob').value = dateStr;
+            }
+
+            if(data.phone) document.getElementById('phone').value = clean(data.phone);
+
+            if(data.lineInfo) {
+                let lineVal = clean(data.lineInfo);
+                const lineInput = document.getElementById('lineInput');
+                const radios = document.getElementsByName('lineType');
+                if (lineVal.startsWith("(電話)")) {
+                    radios[1].checked = true;
+                    lineInput.value = lineVal.replace("(電話) ", "").trim();
+                    switchLineMode();
+                } else {
+                    radios[0].checked = true;
+                    lineInput.value = lineVal;
+                    switchLineMode();
+                }
+            }
+
+            if(data.gender) { 
+                const gVal = clean(data.gender);
+                const radios = document.getElementsByName('gender'); 
+                for(let r of radios) { if(r.value === gVal) r.checked = true; } 
+            }
+
+            if(data.bankCode) { 
+                let code = clean(data.bankCode);
+                const bankSelect = document.getElementById('bankCode');
+                let found = false;
+                for(let opt of bankSelect.options) {
+                    if(opt.value === code) { bankSelect.value = code; found = true; break; }
+                }
+                if(!found && code) {
+                    bankSelect.value = 'manual';
+                    document.getElementById('bankCodeManual').value = code;
+                }
+                handleBankChange(bankSelect);
+            }
+            
+            if(data.bankName) document.getElementById('bankName').value = clean(data.bankName);
+            if(data.account) document.getElementById('bankAccount').value = clean(data.account);
+            if(data.branch) document.getElementById('branchName').value = clean(data.branch);
+        }
 
         window.restrictNum = (el) => el.value = el.value.replace(/[^\d]/g, '');
         window.validateName = (el) => toggleError(el, el.value && /^[\u4e00-\u9fa5]{2,5}$/.test(el.value) ? "" : "❌ 限 2-5 字純中文");
         window.validatePhone = (el) => toggleError(el, el.value && /^09\d{8}$/.test(el.value) ? "" : "❌ 格式錯誤");
+        
         function toggleError(el, msg) {
             let err = el.parentNode.querySelector('.error-message');
             if (el.id === 'lineInput') err = document.getElementById('lineError');
             if(msg) { el.classList.add('input-error'); if(err){ err.style.display='block'; err.innerText=msg;} return false; }
             else { el.classList.remove('input-error'); if(err) err.style.display='none'; return true; }
         }
+
         window.switchLineMode = () => {
             const mode = document.querySelector('input[name="lineType"]:checked').value;
             const input = document.getElementById('lineInput');
             const hint = document.getElementById('lineHint');
-            input.value = ""; toggleError(input, ""); 
-            if (mode === 'id') { input.placeholder = "請輸入 Line ID"; hint.textContent = "ID 需為 2-20 字元，僅限小寫英文、數字及符號"; input.oninput = null; }
-            else { input.placeholder = "請輸入綁定的電話號碼"; hint.textContent = "請輸入 09 開頭的手機號碼"; input.oninput = function() { restrictNum(this); }; }
+            if (mode === 'id') { 
+                input.placeholder = "請輸入 Line ID"; 
+                hint.textContent = "ID 需為 2-20 字元，僅限小寫英文、數字及符號"; 
+                input.oninput = null; 
+            } else { 
+                input.placeholder = "請輸入綁定的電話號碼"; 
+                hint.textContent = "請輸入 09 開頭的手機號碼"; 
+                input.oninput = function() { restrictNum(this); }; 
+            }
         };
+
         window.validateLine = (el) => {
             const mode = document.querySelector('input[name="lineType"]:checked').value;
             const val = el.value;
@@ -120,6 +187,7 @@
                 toggleError(el, ""); return true;
             }
         };
+
         window.checkAge = (el) => {
             if(!el.value) return;
             const dob = new Date(el.value);
@@ -130,65 +198,69 @@
             if (age < 14) return toggleError(el, "❌ 抱歉，需年滿 14 歲");
             toggleError(el, ""); return true;
         };
+
         window.validateAccount = (el) => {
             if(el.value.length === 16) toggleError(el, "❌ 疑似填成卡號");
             else toggleError(el, el.value.length >= 10 && el.value.length <= 14 ? "" : "❌ 長度應為 10-14 碼");
         };
+
         window.handleBankChange = (el) => {
             const isManual = el.value === 'manual';
             document.getElementById('bankCodeManual').style.display = isManual ? 'block' : 'none';
             const nameInput = document.getElementById('bankName');
             nameInput.readOnly = !isManual;
             nameInput.classList.toggle('readonly-input', !isManual);
-            if(!isManual) nameInput.value = el.options[el.selectedIndex].text.split(' - ')[1];
-            else nameInput.value = "";
+            if(!isManual && el.selectedIndex > 0) {
+                nameInput.value = el.options[el.selectedIndex].text.split(' - ')[1];
+            }
         };
 
-        function fillForm(data) {
-            // 👇 新增：填入會員編號 👇
-            if(data.id) document.getElementById('memberId').value = data.id;
-            else document.getElementById('memberId').value = "未核發 (請等待管理員建立)";
-
-            if(data.name) document.getElementById('realName').value = data.name;
-            if(data.birthday) document.getElementById('dob').value = data.birthday.split('T')[0];
-            if(data.phone) document.getElementById('phone').value = data.phone;
-            if(data.lineInfo) document.getElementById('lineInput').value = data.lineInfo;
-            if(data.gender) { const radios = document.getElementsByName('gender'); for(let r of radios) { if(r.value === data.gender) r.checked = true; } }
-            if(data.bankCode) document.getElementById('bankCode').value = data.bankCode;
-            if(data.bankName) document.getElementById('bankName').value = data.bankName;
-            if(data.account) document.getElementById('bankAccount').value = data.account;
-            if(data.branch) document.getElementById('branchName').value = data.branch;
-        }
-
         window.saveData = async function() {
+            // 🛑 新增檢查：電話必填
+            if (!document.getElementById('phone').value) { alert("❌ 請填寫電話號碼"); return; }
+            
+            // 原有的檢查
             if (!window.validateLine(document.getElementById('lineInput'))) { alert("❌ Line 格式錯誤"); return; }
             if (document.querySelector('#dob').classList.contains('input-error')) { alert("❌ 生日格式錯誤"); return; }
             if (!document.getElementById('realName').value || !document.getElementById('bankAccount').value) { alert("❌ 請檢查必填欄位"); return; }
+            
             const btn = document.querySelector("button[onclick='saveData()']");
+            const originalText = btn.innerText;
             btn.innerText = "處理中..."; btn.disabled = true;
+
             let bankCode = document.getElementById('bankCode').value;
             if(bankCode === 'manual') bankCode = document.getElementById('bankCodeManual').value;
+            
             let lineInfo = document.getElementById('lineInput').value;
             let lineType = document.querySelector('input[name="lineType"]:checked').value;
             if(lineType === 'phone') lineInfo = "(電話) " + lineInfo;
+
             const gender = document.querySelector('input[name="gender"]:checked').value;
+            
             const payload = {
                 action: "update_member",
                 email: currentUserEmail,
                 realName: document.getElementById('realName').value,
                 birthday: document.getElementById('dob').value,
                 phone: document.getElementById('phone').value,
-                gender: gender, lineInfo: lineInfo, bankCode: bankCode,
+                gender: gender, 
+                lineInfo: lineInfo, 
+                bankCode: bankCode,
                 bankName: document.getElementById('bankName').value,
                 account: document.getElementById('bankAccount').value,
                 branch: document.getElementById('branchName').value
             };
+
             try {
                 const res = await fetch(GAS_URL, { method: "POST", body: JSON.stringify(payload) });
                 const json = await res.json();
                 alert(json.status === "success" ? "✅ 更新成功！" : "❌ 失敗：" + json.message);
-            } catch(e) { alert("連線錯誤"); }
-            finally { btn.innerText = "💾 儲存資料"; btn.disabled = false; }
+            } catch(e) { 
+                alert("連線錯誤"); 
+            } finally { 
+                btn.innerText = originalText; 
+                btn.disabled = false; 
+            }
         };
     </script>
 </body>
