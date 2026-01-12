@@ -64,7 +64,7 @@
                 <input type="text" id="carrier" class="form-input" placeholder="例如：中通、圓通、順豐">
             </div>
             <div style="margin-bottom:20px;">
-                <label class="form-label">包裹內容/備註</label>
+                <label class="form-label">包裹內容/備註 <span style="color:red">*</span></label>
                 <input type="text" id="note" class="form-input" placeholder="例如：衣服 x 3, 易碎品">
             </div>
             <button class="btn" onclick="submitPackage()">📤 提交回報單</button>
@@ -111,7 +111,11 @@
             const carrier = document.getElementById('carrier').value;
             const note = document.getElementById('note').value;
 
-            if (!trackingNum) { alert("❌ 請務必填寫快遞單號！"); return; }
+            // 🟢 修改：驗證單號與內容皆為必填
+            if (!trackingNum || !note) { 
+                alert("❌ 請務必填寫快遞單號與包裹內容！"); 
+                return; 
+            }
 
             const btn = document.querySelector("button[onclick='submitPackage()']");
             btn.innerText = "提交中..."; btn.disabled = true;
