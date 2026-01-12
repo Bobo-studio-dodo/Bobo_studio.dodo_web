@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>波幣使用紀錄 | Bobo_studio.dodo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --text-primary: #8a5a6a; --text-secondary: #b38996; --accent-pink: #ff9eb5; --accent-hover: #ff7a96; --bg-main: #fffafc; --bg-card: #ffffff; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans TC', sans-serif; margin: 0; background-color: var(--bg-main); color: var(--text-primary); }
+        
+        header { background: rgba(255, 255, 255, 0.9); padding: 0.8rem 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ffe3ec; position: sticky; top: 0; z-index: 10; }
+        .logo-text { font-weight: bold; font-size: 1.2rem; color: var(--text-primary); }
+        
+        .container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem 4rem 1.5rem; }
+        .card { background: var(--bg-card); border-radius: 20px; padding: 2rem; box-shadow: 0 10px 25px rgba(255, 158, 181, 0.15); border: 1px solid #ffe3ec; min-height: 200px;}
+        
+        .btn-back { background-color: #eee; color: #666; border: none; padding: 8px 15px; border-radius: 50px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
+        .btn-back:hover { background-color: #ddd; }
+
+        /* 餘額大卡片 */
+        .balance-header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px dashed #ffe3ec; }
+        .balance-title { font-size: 1rem; color: var(--text-secondary); margin-bottom: 5px; }
+        .balance-amount { font-size: 2.5rem; font-weight: bold; color: var(--text-primary); }
+        .coin-symbol { color: #f1c40f; margin-right: 5px; }
+
+        /* 列表樣式 */
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #f0f0f0; }
+        .history-item:last-child { border-bottom: none; }
+        
+        .h-left { display: flex; flex-direction: column; gap: 5px; }
+        .h-title { font-weight: bold; color: #555; font-size: 1rem; }
+        .h-date { font-size: 0.85rem; color: #999; }
+        
+        .h-right { font-weight: bold; font-size: 1.1rem; }
+        .amount-plus { color: #27ae60; } /* 增加是綠色 */
+        .amount-minus { color: #e74c3c; } /* 減少是紅色 */
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-text">波幣使用紀錄</div>
+        <button class="btn-back" onclick="location.href='index.html'">⬅ 回大廳</button>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            
+            <div class="balance-header">
+                <div class="balance-title">目前餘額</div>
+                <div class="balance-amount"><span class="coin-symbol">💰</span><span id="currentBalance">...</span></div>
+            </div>
+
+            <h4 style="margin: 0 0 15px 0; color: var(--text-secondary);">📜 最近紀錄</h4>
+            <div id="loadingText" style="text-align:center; color:#999; padding:20px;">讀取中...</div>
+            <div id="historyList"></div>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCE95n9P7oeUMDo_LGffDt9H8pGtpmUOFw",
+            authDomain: "my-shop-2026-1b573.firebaseapp.com",
+            projectId: "my-shop-2026-1b573",
+            storageBucket: "my-shop-2026-1b573.firebasestorage.app",
+            messagingSenderId: "15775390058",
+            appId: "1:15775390058:web:ef08a6b8bca2657ecbed13"
+        };
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbzVo9_FACAbkJnnIIXTXu4g4pgCSPKrx9q90Ywd1_rlbXsbmmAmnAprbAbfnB-akdLhtA/exec";
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                loadCoinHistory(user.email);
+            } else {
+                alert("請先登入");
+                location.href = "index.html";
+            }
+        });
+
+        async function loadCoinHistory(email) {
+            try {
+                // 呼叫後端，請求 action: "get_coin_history"
+                const res = await fetch(GAS_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "get_coin_history", email: email })
+                });
+                const json = await res.json();
+                
+                document.getElementById('loadingText').style.display = 'none';
+
+                if (json.data) {
+                    // 更新上方總餘額
+                    document.getElementById('currentBalance').innerText = json.currentBalance || 0;
+                    
+                    const list = document.getElementById('historyList');
+                    let html = "";
+
+                    if (json.data.length === 0) {
+                        list.innerHTML = '<div style="text-align:center; color:#ccc; padding:20px;">目前沒有交易紀錄</div>';
+                        return;
+                    }
+
+                    // 產生列表
+                    json.data.forEach(item => {
+                        // 判斷金額正負來給予顏色 (假設後端回傳 amount 為數字，正數或負數)
+                        // 若後端只給絕對值，需要依賴 type 來判斷，這裡假設 amount 本身帶有正負號，或者 type 有標記
+                        let amountClass = item.amount >= 0 ? "amount-plus" : "amount-minus";
+                        let sign = item.amount > 0 ? "+" : ""; // 正數補個 + 號
+
+                        html += `
+                        <div class="history-item">
+                            <div class="h-left">
+                                <div class="h-title">${item.note || "一般異動"}</div>
+                                <div class="h-date">${item.date}</div>
+                            </div>
+                            <div class="h-right ${amountClass}">
+                                ${sign}${item.amount}
+                            </div>
+                        </div>`;
+                    });
+                    list.innerHTML = html;
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loadingText').innerText = "讀取失敗，請稍後再試";
+            }
+        }
+    </script>
+</body>
+</html>
