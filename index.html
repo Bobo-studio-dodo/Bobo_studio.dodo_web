@@ -20,8 +20,13 @@
         p { color: #b38996; font-size: 1.1rem; margin-bottom: 2rem; }
 
         /* 波幣顯示區塊 */
-        .coin-badge { background: #fff; border: 2px solid var(--accent-pink); color: var(--text-primary); padding: 10px 25px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(255, 158, 181, 0.2); }
-
+        .coin-badge { background: #fff; border: 2px solid var(--accent-pink); color: var(--text-primary); padding: 10px 25px; border-radius: 50px; font-weight: bold; font-size: 1.1rem; margin-bottom: 25px; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 5px 15px rgba(255, 158, 181, 0.2); cursor: pointer; 
+    transition: 0.3s;}
+.coin-badge:hover {
+    background-color: #fff0f5;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 158, 181, 0.3);
+}
         /* 儀表板按鈕區 */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; width: 100%; max-width: 900px; padding: 0 20px; margin-bottom: 40px; }
         .dash-card { background: white; padding: 30px 20px; border-radius: 20px; text-decoration: none; color: var(--text-primary); box-shadow: 0 10px 20px rgba(255, 158, 181, 0.15); border: 2px solid transparent; transition: 0.3s; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -81,10 +86,12 @@
         </div>
         <h1 id="heroTitle">探索您的質感選物</h1>
         
-        <div id="coinArea" style="display:none;">
-            <div class="coin-badge">💰 波幣餘額：<span id="coinBalance">0</span></div>
-        </div>
-
+       <div id="coinArea" style="display:none;">
+    <div class="coin-badge" onclick="location.href='coin_history.html'" title="點擊查看使用紀錄">
+        💰 波幣餘額：<span id="coinBalance">0</span> 
+        <span style="font-size:0.8rem; color:#b38996; margin-left:5px;">(查看紀錄 >)</span>
+    </div>
+</div>
         <p id="heroDesc">登入會員以享受專屬服務</p>
         
         <div id="loginArea">
@@ -228,3 +235,4 @@
     </script>
 </body>
 </html>
+
