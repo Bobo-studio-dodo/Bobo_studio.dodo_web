@@ -80,18 +80,35 @@
     animation: fadeIn 0.3s;
 }
 .news-card { 
-    background: white; width: 90%; max-width: 450px; 
-    border-radius: 20px; overflow: hidden; 
+    background: white; 
+    width: 90%; 
+    max-width: 450px; 
+    /* 👇 新增這三行：限制高度不超過螢幕 80%，並讓內部元件垂直排列 */
+    max-height: 80vh; 
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px; 
+    overflow: hidden; 
     box-shadow: 0 20px 50px rgba(0,0,0,0.3); 
     animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 修改這段：讓內容太長時可以捲動 */
+.news-body { 
+    padding: 20px 30px; /* 左右增加一點空間 */
+    color: #555; 
+    line-height: 1.8; /* 行距加大，比較好讀 */
+    font-size: 1rem; 
+    white-space: normal;
+    overflow-y: auto; 
+    flex: 1; 
+    /* 👇 關鍵修改：強制靠左對齊，解決版面散亂問題 */
+    text-align: left; 
 }
 .news-header { 
     background: var(--accent-pink); padding: 20px; text-align: center; color: white;
 }
-.news-body { 
-    padding: 30px 25px; color: #555; line-height: 1.6; font-size: 1.05rem; 
-    white-space: pre-wrap; /* 讓換行符號生效 */
-}
+
 .news-footer { 
     padding: 0 25px 25px 25px; text-align: center; 
 }
@@ -244,15 +261,31 @@
                             body: JSON.stringify({ action: "get_news" }) 
                         });
                         const jsonNews = await resNews.json();
-
-                        if (jsonNews.status === "success") {
-                            document.getElementById('newsTitle').innerText = "🔔 " + jsonNews.data.title;
-                            document.getElementById('newsDate').innerText = jsonNews.data.date;
-                            document.getElementById('newsContent').innerText = jsonNews.data.content;
-                            
-                            // 顯示彈窗
-                            document.getElementById('newsModal').style.display = 'flex';
-                        }
+                        // ✅ 新的寫法 (支援多筆顯示)
+                    if (jsonNews.status === "success") {
+                        const newsList = jsonNews.data;
+                        document.getElementById('newsTitle').innerText = "🔔 最新公告通知";
+                        document.getElementById('newsDate').innerText = ""; 
+                            let htmlContent = "";
+    
+                    newsList.forEach((news, index) => {
+        // 設定分隔線
+        const borderStyle = (index < newsList.length - 1) 
+            ? 'border-bottom: 1px dashed #ddd; margin-bottom: 20px; padding-bottom: 20px;' 
+            : '';
+        // 👇 這裡的 HTML 標籤我不做換行，避免產生多餘空白
+        htmlContent += `<div style="${borderStyle}">`;
+        // 1. 標題
+        htmlContent += `<div style="font-weight:bold; font-size:1.1rem; color:#d63384; margin-bottom:5px;">📌 ${news.title}</div>`;
+        // 2. 日期
+        htmlContent += `<div style="font-size:0.85rem; color:#999; margin-bottom:10px; font-family: monospace;">📅 ${news.date}</div>`;
+        // 3. 內容 (⭐ 關鍵：只在這裡加上 white-space: pre-wrap)
+        htmlContent += `<div style="color:#333; white-space: pre-wrap;">${news.content}</div>`;
+        htmlContent += `</div>`;
+    });
+    document.getElementById('newsContent').innerHTML = htmlContent;
+    document.getElementById('newsModal').style.display = 'flex';
+}
                     }
                 } catch (e) {
                     console.error("公告讀取失敗", e);
