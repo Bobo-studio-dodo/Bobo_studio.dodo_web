@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -87,6 +86,21 @@
             }
         }
 
+        // --- (新功能) 日期格式化小工具 ---
+        function formatDate(isoString) {
+            if (!isoString) return "";
+            // 將 ISO 時間字串轉為 Date 物件 (會自動轉為瀏覽器當地時間)
+            const date = new Date(isoString);
+            
+            // 檢查日期是否有效
+            if (isNaN(date.getTime())) return isoString; // 如果不是日期，就原樣顯示
+
+            // 輸出格式：YYYY/MM/DD
+            return date.getFullYear() + '/' + 
+                   String(date.getMonth() + 1).padStart(2, '0') + '/' + 
+                   String(date.getDate()).padStart(2, '0');
+        }
+
         function renderList(data) {
             const listArea = document.getElementById('listArea');
             const statusArea = document.getElementById('statusArea');
@@ -104,10 +118,11 @@
                 // 處理備註顯示
                 const noteHtml = item.note ? `<div class="note-text">⚠️ 備註：${item.note}</div>` : '';
                 
+                // --- (修改處) 這裡套用了 formatDate ---
                 html += `
                 <div class="record-card">
                     <div class="card-header">
-                        <span class="batch-tag">${item.batch}</span>
+                        <span class="batch-tag">${formatDate(item.batch)}</span> 
                         <span class="total-price">$${item.total}</span>
                     </div>
                     <div class="card-body">
